@@ -145,21 +145,31 @@ def strategy_first_training(meta_base):
 # ============================================================
 
 if __name__ == "__main__":
-    meta_base_path = "/data/MetaBase.csv"
-    print(f"Loading meta-base from {meta_base_path}...")
+    import requests
+    import io
 
-    meta_base = pd.read_csv(meta_base_path)
-    print(f"Meta-base loaded. Shape: {meta_base.shape}")
+    github_csv_url = "https://raw.githubusercontent.com/JusciAvelino/MetaIR-Framework/main/data/MetaBase.csv"
 
+    print(f"Downloading meta-base from GitHub: {github_csv_url}")
+
+    try:
+        response = requests.get(github_csv_url)
+        response.raise_for_status()  # garante que deu certo
+        meta_base = pd.read_csv(io.StringIO(response.text))
+        print(f"Meta-base loaded from GitHub. Shape: {meta_base.shape}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to load MetaBase.csv from GitHub: {e}")
+
+    # Verifica colunas obrigatórias
     if not {'model', 'strategy'}.issubset(meta_base.columns):
         raise ValueError("The meta-base must contain 'model' and 'strategy' columns.")
 
-    # Train meta-models
+    # Treina os meta-modelos
     model_independent = independent_training(meta_base)
     model_model_first = model_first_training(meta_base)
     model_strategy_first = strategy_first_training(meta_base)
 
-    # Save all models
+    # Salva todos os modelos
     dump(model_independent, "meta_independent.pkl")
     dump(model_model_first, "meta_model_first.pkl")
     dump(model_strategy_first, "meta_strategy_first.pkl")
@@ -168,3 +178,4 @@ if __name__ == "__main__":
     print("   - meta_independent.pkl")
     print("   - meta_model_first.pkl")
     print("   - meta_strategy_first.pkl")
+
