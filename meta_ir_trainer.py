@@ -145,7 +145,7 @@ def strategy_first_training(meta_base):
 # ============================================================
 
 if __name__ == "__main__":
-    meta_base_path = "/content/MetaBase.csv"
+    meta_base_path = "/data/MetaBase.csv"
     print(f"Loading meta-base from {meta_base_path}...")
 
     meta_base = pd.read_csv(meta_base_path)
