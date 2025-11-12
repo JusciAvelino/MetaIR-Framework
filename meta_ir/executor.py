@@ -195,3 +195,37 @@ if __name__ == "__main__":
     print("\nAll recommendations executed successfully!")
     print(f"Results saved to: {results_path}")
     print(results_df)
+
+def execute_all(dataset_path, rec_dir, output_path):
+    df = pd.read_csv(dataset_path)
+    target_col = df.columns[-1]
+    X = df.drop(columns=[target_col, df.columns[0]])
+    y = df[target_col]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    train_df = pd.concat([y_train.reset_index(drop=True), X_train.reset_index(drop=True)], axis=1)
+
+    rec_files = {
+        "independent": os.path.join(rec_dir, "recommendation_independent.csv"),
+        "model_first": os.path.join(rec_dir, "recommendation_model_first.csv"),
+        "strategy_first": os.path.join(rec_dir, "recommendation_strategy_first.csv"),
+    }
+
+    results = []
+    for mode, rec_path in rec_files.items():
+        if not os.path.exists(rec_path):
+            continue
+        recommendation = pd.read_csv(rec_path)
+        model_name = str(recommendation.iloc[0, 0])
+        strategy_name = str(recommendation.iloc[0, -1])
+
+        balanced_train = apply_balancing(train_df.copy(), strategy_name)
+        y_bal, X_bal = balanced_train.iloc[:, 0], balanced_train.iloc[:, 1:]
+        model = get_model_by_code(model_name)
+        model.fit(X_bal, y_bal)
+        y_pred = model.predict(X_test)
+        mae, rmse, r2, sera_val = evaluate(y_test, y_pred)
+        results.append([mode, model_name, strategy_name, mae, rmse, r2, sera_val])
+
+    results_df = pd.DataFrame(results, columns=["Mode", "Model", "Strategy", "MAE", "RMSE", "R2", "SERA"])
+    results_df.to_csv(output_path, index=False)
+    print(f"Results saved to {output_path}")
