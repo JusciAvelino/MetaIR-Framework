@@ -128,9 +128,9 @@ class META_IR_Predictor:
 if __name__ == "__main__":
     # Paths to trained meta-models
     model_paths = {
-        'independent': 'meta_independent.pkl',
-        'model_first': 'meta_model_first.pkl',
-        'strategy_first': 'meta_strategy_first.pkl'
+        'independent': '/content/MetaIR-Framework/meta_independent.pkl',
+        'model_first': '/content/MetaIR-Framework/meta_model_first.pkl',
+        'strategy_first': '/content/MetaIR-Framework/meta_strategy_first.pkl'
     }
 
     # Initialize the predictor
