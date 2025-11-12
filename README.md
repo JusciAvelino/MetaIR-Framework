@@ -8,9 +8,7 @@ It automates the process of:
 - Generating **recommendations** (model + balancing strategy),
 - Executing and **evaluating** those recommendations using relevance-based metrics.
 
-Citation:
 Avelino, J. G., Cavalcanti, G. D., & Cruz, R. M. (2025). Imbalanced regression pipeline recommendation. Machine Learning, 114(6), 1-48.
-
 
 ```bibtex
 @article{avelino2025imbalanced,
