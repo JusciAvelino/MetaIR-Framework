@@ -177,3 +177,14 @@ if __name__ == "__main__":
     print("   - meta_independent.pkl")
     print("   - meta_model_first.pkl")
     print("   - meta_strategy_first.pkl")
+
+def train_all(meta_base_path="/content/MetaIR-Framework/data/MetaBase.csv", save_dir="."):
+    meta_base = pd.read_csv(meta_base_path)
+    model_independent = independent_training(meta_base)
+    model_model_first = model_first_training(meta_base)
+    model_strategy_first = strategy_first_training(meta_base)
+
+    dump(model_independent, os.path.join(save_dir, "meta_independent.pkl"))
+    dump(model_model_first, os.path.join(save_dir, "meta_model_first.pkl"))
+    dump(model_strategy_first, os.path.join(save_dir, "meta_strategy_first.pkl"))
+    print("All meta-models trained and saved.")
