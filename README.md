@@ -9,4 +9,14 @@ It automates the process of:
 - Executing and **evaluating** those recommendations using relevance-based metrics.
 
 
-Avelino, J. G., Cavalcanti, G. D., & Cruz, R. M. (2025). Imbalanced regression pipeline recommendation. Machine Learning, 114(6), 1-48.
+```bibtex
+@article{avelino2025imbalanced,
+  title={Imbalanced regression pipeline recommendation},
+  author={Avelino, Juscimara G and Cavalcanti, George DC and Cruz, Rafael MO},
+  journal={Machine Learning},
+  volume={114},
+  number={6},
+  pages={1--48},
+  year={2025},
+  publisher={Springer}
+}
