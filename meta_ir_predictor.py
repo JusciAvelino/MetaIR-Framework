@@ -125,7 +125,7 @@ if __name__ == "__main__":
     import requests
 
     # URL to dataset in the repo (note: filename may be machine_CPU.csv vs machineCPU.csv)
-    github_csv_url = "https://raw.githubusercontent.com/JusciAvelino/MetaIR-Framework/main/data/machine_CPU.csv"
+    github_csv_url = "https://raw.githubusercontent.com/JusciAvelino/MetaIR-Framework/main/data/machineCPU_meta.csv"
     print(f"Downloading dataset from GitHub: {github_csv_url}")
 
     try:
