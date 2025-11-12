@@ -2,72 +2,68 @@
 meta_ir_predictor.py
 --------------------
 
-META-IR Predictor for inference.
+Simplified META-IR Predictor class for meta-learning-based recommendation in
+information retrieval regression tasks.
+
+This version is designed for *inference only* — assuming the models have
+already been trained (using Independent Training, Model-First, or
+Strategy-First approaches) and saved to disk.
 
 """
 
-import os
-import io
-import requests
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 from joblib import load
-import traceback
+import os
 
-# Import the classes so pickle can find them when loading objects that reference them.
-# This assumes meta_ir_trainer.py is in the same folder or on PYTHONPATH.
-try:
-    from meta_ir_trainer import IndependentModel, ModelFirst, StrategyFirst
-    _trainer_imported = True
-except Exception as e:
-    # If import fails, we still continue — dill fallback may help, but best is to have trainer available.
-    print("Warning: could not import classes from meta_ir_trainer.py:", e)
-    _trainer_imported = False
-
-# Try to import dill for fallback loading of pickles if needed
-try:
-    import dill
-    _have_dill = True
-except Exception:
-    _have_dill = False
 
 class META_IR_Predictor:
+    """
+    META_IR_Predictor
+    -----------------
+    A lightweight class for recommending models and strategies in
+    information retrieval regression tasks based on meta-features.
+
+    This version assumes that all meta-models are pre-trained and stored
+    as `.pkl` files.
+
+    Parameters
+    ----------
+    model_paths : dict
+        Dictionary mapping each training mode to the path of its saved model.
+        Example:
+        {
+            'independent': 'meta_independent.pkl',
+            'model_first': 'meta_model_first.pkl',
+            'strategy_first': 'meta_strategy_first.pkl'
+        }
+
+    Attributes
+    ----------
+    models : dict
+        Loaded sklearn-compatible models for each mode.
+
+    Methods
+    -------
+    predict(X, mode='independent')
+        Generate recommendations using one of the available trained models.
+    """
+
     def __init__(self, model_paths):
         self.model_paths = model_paths
         self.models = {}
 
+        # Load all available trained models
         for mode, path in model_paths.items():
-            if not os.path.exists(path):
-                print(f"Model file for mode '{mode}' not found at path: {path}")
-                continue
-
-            # First try joblib.load (most common)
             try:
                 self.models[mode] = load(path)
-                print(f"Model '{mode}' successfully loaded from {path} (joblib).")
-                continue
-            except Exception as e_joblib:
-                print(f"joblib.load failed for '{mode}' ({path}): {e_joblib}")
-
-            # If joblib failed, try dill (if available)
-            if _have_dill:
-                try:
-                    with open(path, 'rb') as f:
-                        self.models[mode] = dill.load(f)
-                    print(f"Model '{mode}' successfully loaded from {path} (dill fallback).")
-                    continue
-                except Exception as e_dill:
-                    print(f"dill.load also failed for '{mode}' ({path}): {e_dill}")
-
-            # If we arrive here, loading failed
-            print(f"Failed to load model '{mode}' from {path}. See errors above.")
-
-        if not self.models:
-            print("ERROR: No models were loaded. Check that the .pkl files exist and that meta_ir_trainer.py is available.")
-        else:
-            print("Loaded models:", list(self.models.keys()))
+                print(f"Model '{mode}' successfully loaded from {path}.")
+            except Exception as e:
+                print(f"⚠️ Failed to load model '{mode}' from {path}: {e}")
 
     def _check_input(self, X):
+        """Validate that the input is a non-empty pandas DataFrame."""
         if not isinstance(X, pd.DataFrame):
             raise ValueError("Input must be a pandas.DataFrame containing meta-features.")
         if X.empty:
@@ -75,95 +71,88 @@ class META_IR_Predictor:
         return X
 
     def predict(self, X, mode='independent'):
+        """
+        Generate recommendations for a given dataset based on pre-trained models.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            A DataFrame containing meta-features extracted from a dataset.
+        mode : str
+            One of the following prediction modes:
+                - 'independent'
+                - 'model_first'
+                - 'strategy_first'
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DataFrame containing the recommended 'model' and/or 'strategy'.
+        """
         X = self._check_input(X)
 
         if mode not in self.models:
             raise ValueError(f"Invalid mode. Choose one of: {list(self.models.keys())}")
 
         model = self.models[mode]
-        print(f"Generating predictions using mode '{mode}'...")
+        print(f"🔍 Generating predictions using mode '{mode}'...")
 
-        # Support both the custom objects defined in trainer and scikit-learn-like objects
+        # Depending on how the models were saved, adjust outputs accordingly
         if mode == 'independent':
-            # If the loaded object has a predict that returns a DataFrame, accept it
             pred = model.predict(X)
-            if isinstance(pred, pd.DataFrame):
-                pred_df = pred
-            else:
-                pred_df = pd.DataFrame(pred, columns=['model', 'strategy'])
+            pred_df = pd.DataFrame(pred, columns=['model', 'strategy'])
 
         elif mode == 'model_first':
             pred = model.predict(X)
-            if isinstance(pred, pd.DataFrame):
-                pred_df = pred
-            else:
-                pred_df = pd.DataFrame(pred, columns=['strategy'])
-                if hasattr(model, 'model_predictor'):
-                    pred_df['model'] = model.model_predictor.predict(X)
+            pred_df = pd.DataFrame(pred, columns=['strategy'])
+
+            # If an additional model predictor exists (optional)
+            if hasattr(model, 'model_predictor'):
+                pred_df['model'] = model.model_predictor.predict(X)
 
         elif mode == 'strategy_first':
             pred = model.predict(X)
-            if isinstance(pred, pd.DataFrame):
-                pred_df = pred
-            else:
-                pred_df = pd.DataFrame(pred, columns=['model'])
-                if hasattr(model, 'strategy_predictor'):
-                    pred_df['strategy'] = model.strategy_predictor.predict(X)
+            pred_df = pd.DataFrame(pred, columns=['model'])
 
-        else:
-            raise ValueError("Unknown mode.")
+            # If an additional strategy predictor exists (optional)
+            if hasattr(model, 'strategy_predictor'):
+                pred_df['strategy'] = model.strategy_predictor.predict(X)
 
         print("Recommendations successfully generated.")
         return pred_df
 
 
 # ===========================================================
-# Example usage with GitHub dataset
+# Example usage with CSV output
 # ===========================================================
 if __name__ == "__main__":
-    import io
-    import requests
-
-    # Load meta-features dataset locally instead of downloading from GitHub
-    local_path = "/content/MetaIR-Framework/data/machineCPU_meta.csv"
-    print(f"Loading dataset locally from: {local_path}")
-    
-    if not os.path.exists(local_path):
-        raise FileNotFoundError(f" Local file not found: {local_path}\nDid you run the meta-feature extraction step?")
-    else:
-        X_new = pd.read_csv(local_path)
-        print(f" Dataset loaded locally. Shape: {X_new.shape}")
-
-    # Paths to trained meta-models (adjust if your .pkl are in models/ or other folder)
+    # Paths to trained meta-models
     model_paths = {
         'independent': 'meta_independent.pkl',
         'model_first': 'meta_model_first.pkl',
         'strategy_first': 'meta_strategy_first.pkl'
     }
 
-    # If the .pkl files are in a models/ directory use that path e.g. 'models/meta_independent.pkl'
-    # model_paths = {k: os.path.join('models', v) for k,v in model_paths.items()}
-
+    # Initialize the predictor
     meta_pred = META_IR_Predictor(model_paths)
 
-    # If no models loaded, try to instruct the user
-    if not meta_pred.models:
-        print("\\nNo models loaded. Try running the trainer first:")
-        print("  !python meta_ir_trainer.py")
-        raise SystemExit("Aborting: no models available for prediction.")
+    # Load dataset to extract meta-features
+    X_new = pd.read_csv("data/machineCPU_meta.csv")
 
-    output_dir = "/content"
+    # Drop the first column (ID or dataset name)
+    X_new = X_new.drop(X_new.columns[0], axis=1)
+
+    # Folder to save recommendations
+    output_dir = "/content/"
     os.makedirs(output_dir, exist_ok=True)
 
+    # Generate and save recommendations for all modes
     for mode in ['independent', 'model_first', 'strategy_first']:
-        if mode not in meta_pred.models:
-            print(f"Skipping mode '{mode}' (model not loaded).")
-            continue
-        try:
-            preds = meta_pred.predict(X_new, mode=mode)
-            out_path = os.path.join(output_dir, f"recommendation_{mode}.csv")
-            preds.to_csv(out_path, index=False)
-            print(f"Saved recommendations for {mode} -> {out_path}")
-        except Exception as e:
-            print(f"Failed to predict for mode '{mode}': {e}")
-            traceback.print_exc()
+        predictions = meta_pred.predict(X_new, mode=mode)
+        print(f"\nPredicted recommendation ({mode}):")
+        print(predictions)
+
+        # Save to CSV
+        output_path = os.path.join(output_dir, f"recommendation_{mode}.csv")
+        predictions.to_csv(output_path, index=False)
+        print(f"💾 Saved to: {output_path}")
