@@ -222,8 +222,8 @@ def execute_all(dataset_path, rec_dir, output_path):
         model.fit(X_bal, y_bal)
         y_pred = model.predict(X_test)
         mae, rmse, r2, sera_val = evaluate(y_test, y_pred)
-        results.append([mode, model_name, strategy_name, mae, rmse, r2, sera_val])
+        results.append([mode, model_name, strategy_name, mae, rmse, r2])
 
-    results_df = pd.DataFrame(results, columns=["Mode", "Model", "Strategy", "MAE", "RMSE", "R2", "SERA"])
+    results_df = pd.DataFrame(results, columns=["Mode", "Model", "Strategy", "MAE", "RMSE", "R2"])
     results_df.to_csv(output_path, index=False)
     print(f"Results saved to {output_path}")
