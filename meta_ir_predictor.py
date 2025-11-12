@@ -124,17 +124,15 @@ if __name__ == "__main__":
     import io
     import requests
 
-    # URL to dataset in the repo (note: filename may be machine_CPU.csv vs machineCPU.csv)
-    github_csv_url = "https://raw.githubusercontent.com/JusciAvelino/MetaIR-Framework/main/data/machineCPU_meta.csv"
-    print(f"Downloading dataset from GitHub: {github_csv_url}")
-
-    try:
-        resp = requests.get(github_csv_url)
-        resp.raise_for_status()
-        X_new = pd.read_csv(io.StringIO(resp.text))
-        print(f"Dataset loaded from GitHub. Shape: {X_new.shape}")
-    except Exception as e:
-        raise RuntimeError(f"Failed to download/load dataset from GitHub: {e}")
+    # Load meta-features dataset locally instead of downloading from GitHub
+    local_path = "/content/MetaIR-Framework/data/machineCPU_meta.csv"
+    print(f"Loading dataset locally from: {local_path}")
+    
+    if not os.path.exists(local_path):
+        raise FileNotFoundError(f" Local file not found: {local_path}\nDid you run the meta-feature extraction step?")
+    else:
+        X_new = pd.read_csv(local_path)
+        print(f" Dataset loaded locally. Shape: {X_new.shape}")
 
     # Drop first column if it's an ID/name
     if X_new.shape[1] > 1:
