@@ -12,7 +12,10 @@ setup(
         "scikit-learn",
         "xgboost",
         "seaborn",
-        "matplotlib"
+        "matplotlib",
+        "ImbalancedLearningRegression",
+        "smogn",
+        "resreg"
     ],
     python_requires=">=3.8",
 )
