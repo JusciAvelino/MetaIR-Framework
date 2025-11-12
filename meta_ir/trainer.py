@@ -10,6 +10,7 @@ Author: Juscimara Avelino
 """
 
 import pandas as pd
+import os
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
