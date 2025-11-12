@@ -2,14 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-# Importa função phi() e phi.control() do pacote IBLR
-try:
-    from ImbalancedLearningRegression.phi import phi
-    from ImbalancedLearningRegression.phi_ctrl_pts import phi_control
-except ImportError:
-    raise ImportError("❌ O pacote ImbalancedLearningRegression (iblr) não está instalado. "
-                      "Instale com: pip install ImbalancedLearningRegression")
+import ImbalancedLearningRegression as iblr
 
 # ====================================================
 # SER - Squared Error for Relevance
