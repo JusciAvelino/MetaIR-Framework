@@ -96,12 +96,8 @@ def evaluate(y_true, y_pred):
     r2 = r2_score(y_true, y_pred)
 
     # SERA metric
-    try:
-        sera_value = sera(y_true.values, y_pred, phi_trues=None, ph=None)
-    except Exception as e:
-        print(f"Warning: could not compute SERA ({e})")
-        sera_value = np.nan
-
+    sera_value = sera(y_true.values, y_pred)
+    
     print(f"MAE={mae:.4f} | RMSE={rmse:.4f} | R²={r2:.4f} | SERA={sera_value:.4f}")
     return mae, rmse, r2, sera_value
 
