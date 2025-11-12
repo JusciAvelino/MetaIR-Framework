@@ -11,7 +11,6 @@ Applies each recommended (model, strategy) pair from:
   - recommendation_model_first.csv
   - recommendation_strategy_first.csv
 
-Author: Juscimara Avelino
 """
 
 import os
@@ -118,9 +117,9 @@ if __name__ == "__main__":
 
     # Define all possible recommendation files
     rec_files = {
-        "independent": "/content/recommendation_independent.csv",
-        "model_first": "/content/recommendation_model_first.csv",
-        "strategy_first": "/content/recommendation_strategy_first.csv"
+        "independent": "recommendation_independent.csv",
+        "model_first": "recommendation_model_first.csv",
+        "strategy_first": "recommendation_strategy_first.csv"
     }
 
     results_list = []
