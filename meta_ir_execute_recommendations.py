@@ -54,7 +54,7 @@ def apply_balancing(train, strategy):
         trainWC = np.column_stack((y_wercs, X_wercs))
         train = pd.DataFrame(trainWC)
     elif strategy in ["None", "NONE", "NA"]:
-        print("➡️ No balancing applied.")
+        print("No balancing applied.")
     else:
         print(f"Unknown strategy '{strategy}', skipping balancing.")
 
@@ -66,7 +66,7 @@ def apply_balancing(train, strategy):
 # Map short code to model
 # ============================================================
 def get_model_by_code(code):
-    print(f"🤖 Selected model: {code}")
+    print(f"Selected model: {code}")
     code = code.strip().upper()
 
     if code == "BG":
