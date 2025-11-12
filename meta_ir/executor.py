@@ -99,14 +99,12 @@ def evaluate(y_true, y_pred):
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     r2 = r2_score(y_true, y_pred)
 
-    # Calculando phi (relevância)
     try:
-        y_true_series = pd.Series(y_true)
-        ctrl_pts = phi_ctrl_pts(y_true_series)
-        phi_trues = phi(y_true_series, ctrl_pts)
-        sera_value = sera(y_true_series, y_pred, phi_trues=phi_trues, pl=False)
+        sera_value = sera(y_true, y_pred)
+        if isinstance(sera_value, (np.ndarray, list)):
+            sera_value = float(np.mean(sera_value))
     except Exception as e:
-        print(f"Warning: could not compute SERA with phi ({e})")
+        print(f"Warning: failed to compute SERA ({e})")
         sera_value = np.nan
 
     print(f"MAE={mae:.4f} | RMSE={rmse:.4f} | R²={r2:.4f} | SERA={sera_value:.4f}")
