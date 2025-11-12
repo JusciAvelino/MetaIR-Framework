@@ -1,4 +1,3 @@
-
 """
 meta_ir_execute_recommendations.py
 --------------------------------------
@@ -10,7 +9,6 @@ Applies each recommended (model, strategy) pair from:
   - recommendation_independent.csv
   - recommendation_model_first.csv
   - recommendation_strategy_first.csv
-
 """
 
 import os
@@ -27,12 +25,15 @@ import ImbalancedLearningRegression as iblr
 import smogn
 import resreg
 
+# Import SERA metric
+from metrics import sera
+
 
 # ============================================================
 # Apply balancing strategy (same as META_IR)
 # ============================================================
 def apply_balancing(train, strategy):
-    print(f"⚖️ Applying balancing strategy: {strategy}")
+    print(f"Applying balancing strategy: {strategy}")
 
     if strategy == "GN":
         train = iblr.gn(data=train, y=train.columns[0], rel_thres=0.8)
@@ -93,8 +94,16 @@ def evaluate(y_true, y_pred):
     mae = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     r2 = r2_score(y_true, y_pred)
-    print(f"MAE={mae:.4f} | RMSE={rmse:.4f} | R²={r2:.4f}")
-    return mae, rmse, r2
+
+    # SERA metric
+    try:
+        sera_value = sera(y_true.values, y_pred, phi_trues=None, ph=None)
+    except Exception as e:
+        print(f"Warning: could not compute SERA ({e})")
+        sera_value = np.nan
+
+    print(f"MAE={mae:.4f} | RMSE={rmse:.4f} | R²={r2:.4f} | SERA={sera_value:.4f}")
+    return mae, rmse, r2, sera_value
 
 
 # ============================================================
@@ -159,7 +168,7 @@ if __name__ == "__main__":
 
         # Evaluate
         y_pred = model.predict(X_test)
-        mae, rmse, r2 = evaluate(y_test, y_pred)
+        mae, rmse, r2, sera_val = evaluate(y_test, y_pred)
 
         results_list.append({
             "Mode": mode,
@@ -167,7 +176,8 @@ if __name__ == "__main__":
             "Strategy": strategy_name,
             "MAE": mae,
             "RMSE": rmse,
-            "R2": r2
+            "R2": r2,
+            "SERA": sera_val
         })
 
     # Save all results
