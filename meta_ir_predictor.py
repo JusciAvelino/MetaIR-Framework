@@ -129,7 +129,7 @@ if __name__ == "__main__":
     import requests
     import io
 
-    github_csv_url = "https://raw.githubusercontent.com/JusciAvelino/MetaIR-Framework/main/data/machineCPU.csv"
+    github_csv_url = "https://raw.githubusercontent.com/JusciAvelino/MetaIR-Framework/main/data/machine_CPU.csv"
     print(f"Downloading dataset from GitHub: {github_csv_url}")
 
     try:
