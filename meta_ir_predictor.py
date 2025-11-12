@@ -123,36 +123,47 @@ class META_IR_Predictor:
 
 
 # ===========================================================
-# Example usage with CSV output
+# Example usage with CSV output (GitHub-based dataset)
 # ===========================================================
 if __name__ == "__main__":
-    # Paths to trained meta-models
+    import requests
+    import io
+
+    github_csv_url = "https://raw.githubusercontent.com/JusciAvelino/MetaIR-Framework/main/data/machineCPU.csv"
+    print(f"Downloading dataset from GitHub: {github_csv_url}")
+
+    try:
+        response = requests.get(github_csv_url)
+        response.raise_for_status()
+        X_new = pd.read_csv(io.StringIO(response.text))
+        print(f"Dataset loaded from GitHub. Shape: {X_new.shape}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to load dataset from GitHub: {e}")
+
+    # Remove primeira coluna se for identificador
+    X_new = X_new.drop(X_new.columns[0], axis=1)
+    print("Dropped first column (ID or name).")
+
+    # Caminhos dos modelos treinados (pkl)
     model_paths = {
         'independent': 'meta_independent.pkl',
         'model_first': 'meta_model_first.pkl',
         'strategy_first': 'meta_strategy_first.pkl'
     }
 
-    # Initialize the predictor
+    # Inicializa o preditor
     meta_pred = META_IR_Predictor(model_paths)
 
-    # Load dataset to extract meta-features
-    X_new = pd.read_csv("/content/machineCPU.csv")
-
-    # Drop the first column (ID or dataset name)
-    X_new = X_new.drop(X_new.columns[0], axis=1)
-
-    # Folder to save recommendations
+    # Pasta de saída
     output_dir = "/content/"
     os.makedirs(output_dir, exist_ok=True)
 
-    # Generate and save recommendations for all modes
+    # Gera previsões e salva CSVs
     for mode in ['independent', 'model_first', 'strategy_first']:
+        print(f"\nRunning prediction mode: {mode}")
         predictions = meta_pred.predict(X_new, mode=mode)
-        print(f"\nPredicted recommendation ({mode}):")
-        print(predictions)
+        print(predictions.head())
 
-        # Save to CSV
         output_path = os.path.join(output_dir, f"recommendation_{mode}.csv")
         predictions.to_csv(output_path, index=False)
-        print(f"Saved to: {output_path}")
+        print(f"Saved predictions to: {output_path}")
