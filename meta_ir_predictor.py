@@ -44,7 +44,7 @@ class META_IR_Predictor:
             # First try joblib.load (most common)
             try:
                 self.models[mode] = load(path)
-                print(f"✅ Model '{mode}' successfully loaded from {path} (joblib).")
+                print(f"Model '{mode}' successfully loaded from {path} (joblib).")
                 continue
             except Exception as e_joblib:
                 print(f"joblib.load failed for '{mode}' ({path}): {e_joblib}")
@@ -133,10 +133,6 @@ if __name__ == "__main__":
     else:
         X_new = pd.read_csv(local_path)
         print(f" Dataset loaded locally. Shape: {X_new.shape}")
-
-    # Drop first column if it's an ID/name
-    if X_new.shape[1] > 1:
-        X_new = X_new.drop(X_new.columns[0], axis=1)
 
     # Paths to trained meta-models (adjust if your .pkl are in models/ or other folder)
     model_paths = {
